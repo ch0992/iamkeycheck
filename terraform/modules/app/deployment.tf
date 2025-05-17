@@ -19,8 +19,8 @@ resource "kubernetes_deployment" "app" {
       spec {
         container {
           name  = "iamkeycheck"
-          image = "nginx:alpine"
-          image_pull_policy = "Always"
+          image = "iamkeycheck:${var.image_tag}"
+          image_pull_policy = "Never"
 
           port {
             container_port = 8000

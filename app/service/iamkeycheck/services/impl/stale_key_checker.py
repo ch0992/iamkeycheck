@@ -4,7 +4,7 @@ import csv
 import boto3
 import os
 import glob
-from core.logger import logger
+from app.core.logger import logger
 
 class AccessKeyChecker:
     """
@@ -18,7 +18,8 @@ class AccessKeyChecker:
         Args:
             csv_dir (str, optional): CSV 파일이 위치한 디렉토리 경로. 기본값은 None이며, 이 경우 환경 변수를 사용합니다.
         """
-        self.csv_dir = csv_dir or os.getenv("CSV_PATH", "app/secrets/")
+        self.csv_dir = csv_dir or os.getenv("CSV_PATH", "app/api/secrets/")
+    # --- DEBUG: 런타임 환경 경로/변수 로깅 ---
 
     def load_all_credentials(self) -> List[Dict[str, str]]:
         """
@@ -31,6 +32,7 @@ class AccessKeyChecker:
         all_creds = []
         # 지정된 디렉토리 내의 모든 .csv 파일 경로 탐색
         file_paths = glob.glob(os.path.join(self.csv_dir, "*.csv"))
+        # logger.info(f"[KEY-LOAD] Found {len(file_paths)} CSV files in {self.csv_dir}")
 
         for path in file_paths:
             try:
@@ -45,6 +47,7 @@ class AccessKeyChecker:
             except Exception as e:
                 pass
 
+        # logger.info(f"[KEY-LOAD] Final loaded keys: {[row.get('Access key ID') for row in all_creds]}")
         return all_creds
 
     def check_stale_keys(self, threshold_hours: int) -> List[Dict[str, str]]:

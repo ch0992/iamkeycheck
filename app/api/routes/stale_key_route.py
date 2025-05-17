@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query, HTTPException
 from app.service.iamkeycheck.services.impl.stale_key_checker import AccessKeyChecker
-from core.logger import logger
+from app.core.logger import logger
 
 # FastAPI 라우터 인스턴스 생성
 router = APIRouter()

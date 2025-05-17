@@ -1,7 +1,7 @@
 from fastapi import FastAPI
-from core.logger import logger
-from core.config import Settings
-from app.service.iamkeycheck.api.routes import stale_key_route
+from app.core.logger import logger
+from app.core.config import Settings
+from app.api.routes import stale_key_route
 
 # FastAPI 애플리케이션 인스턴스 생성
 # 전체 API의 엔트리포인트가 되는 객체입니다.
@@ -11,7 +11,6 @@ app = FastAPI()
 settings = Settings()
 
 # Access Key 관련 라우터(stale-keys 등)를 앱에 등록
-# 실제 API 엔드포인트는 app/service/iamkeycheck/api/routes/stale_key_route.py에 정의되어 있음
 app.include_router(stale_key_route.router)
 
 @app.get("/health")

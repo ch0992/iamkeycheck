@@ -11,7 +11,8 @@ resource "kubernetes_service" "envoy" {
       port        = 8080
       target_port = 8080
       protocol    = "TCP"
+      node_port   = 30800
     }
-    type = "ClusterIP"
+    type = "NodePort"
   }
 }

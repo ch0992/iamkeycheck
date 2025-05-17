@@ -17,7 +17,11 @@ logger.add(sys.stdout, level="INFO", format="[{time:YYYY-MM-DD HH:mm:ss}] [{leve
 import os
 from datetime import datetime
 # 로그 디렉토리(log)가 없으면 생성
-log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'log')
+log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "log")
+log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "log"))
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
 os.makedirs(log_dir, exist_ok=True)
 logfile_path = os.path.join(log_dir, f"app-{datetime.now().strftime('%y%m%d')}.log")
 logger.add(
