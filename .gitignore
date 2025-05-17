@@ -96,7 +96,6 @@ poetry.lock
 
 # CSV secrets
 **/secrets/*.csv
-**/secrets/*.csv
 
 # VS Code
 .vscode/
