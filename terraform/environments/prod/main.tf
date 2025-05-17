@@ -1,2 +1,17 @@
-# main.tf (prod)
-# Prod 환경용 Terraform 메인 파일 (스텁)
+resource "kubernetes_namespace" "this" {
+  metadata {
+    name = var.namespace
+  }
+}
+
+module "app" {
+  source    = "../../modules/app"
+  image_tag = var.image_tag
+  n_hours   = var.n_hours
+  namespace = "prod"
+}
+
+module "envoy" {
+  source = "../../modules/envoy"
+  namespace = "prod"
+}
