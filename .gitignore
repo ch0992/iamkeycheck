@@ -95,7 +95,8 @@ poetry.lock
 .env.*
 
 # CSV secrets
-applicant_accessKeys.csv
+**/secrets/*.csv
+**/secrets/*.csv
 
 # VS Code
 .vscode/
