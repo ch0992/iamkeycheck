@@ -29,35 +29,6 @@ WORK_DIR="terraform/environments/$STAGE"
 TF_BIN="${TF_BIN:-$HOME/.local/bin/terraform}"
 APP_NAME="iamkeycheck"
 
-# CSV 파일 검증 함수
-csv_validation() {
-  local csv_dir="$1"
-  
-  # 디렉토리 존재 여부 검사
-  if [ ! -d "$csv_dir" ]; then
-    echo "❌ $csv_dir 디렉토리가 없습니다."
-    return 1
-  fi
-
-  # CSV 파일 검색
-  local csv_files=$(find "$csv_dir" -type f -name "*.csv")
-  if [ -z "$csv_files" ]; then
-    echo "❌ $csv_dir에 CSV 파일이 없습니다."
-    return 1
-  fi
-
-  # CSV 파일 정보 출력
-  echo "✅ $csv_dir에 다음 CSV 파일들이 있습니다:"
-  echo "$csv_files"
-  
-  return 0
-}
-
-
-# CSV 파일 검증 실행
-if ! csv_validation "$CSV_PATH"; then
-  exit 1
-fi
 
 # 5. 최신 iamkeycheck 이미지 태그 조회
 IMAGE_TAG=$(nerdctl -n k8s.io images | awk -v stage="$STAGE" '$1=="iamkeycheck" && $2 ~ "^"stage"-v[0-9]+\\.[0-9]+\\.[0-9]+$" {gsub("^"stage"-", "", $2); print $2}' | sort -V | tail -n1)
