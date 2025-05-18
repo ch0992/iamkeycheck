@@ -24,9 +24,9 @@ for STAGE in dev prod; do
   echo "namespace = \"$STAGE\"" >> "$WORK_DIR/env.auto.tfvars"
   [ -n "$CSV_PATH" ] && echo "csv_path = \"$CSV_PATH\"" >> "$WORK_DIR/env.auto.tfvars"
   [ -n "$LOG_LEVEL" ] && echo "log_level = \"$LOG_LEVEL\"" >> "$WORK_DIR/env.auto.tfvars"
-  : "${image_tag:=${IMAGE_TAG:-latest}}"
+  : "${image_tag:=${IMAGE_TAG}}"
   : "${n_hours:=${N_HOURS:-24}}"
-  echo "image_tag = \"$image_tag\"" >> "$WORK_DIR/env.auto.tfvars"
+  echo "image_tag = \"$IMAGE_TAG\"" >> "$WORK_DIR/env.auto.tfvars"
   echo "n_hours = $n_hours" >> "$WORK_DIR/env.auto.tfvars"
   echo "✅ $WORK_DIR/env.auto.tfvars 생성 완료 (AWS 변수는 무시됨)"
 

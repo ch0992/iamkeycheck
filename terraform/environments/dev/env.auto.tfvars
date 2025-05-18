@@ -2,5 +2,5 @@ stage = "dev"
 namespace = "dev"
 csv_path = "app/api/secrets/"
 log_level = "INFO"
-image_tag = "v1.0.3"
+image_tag = ""
 n_hours = 24
