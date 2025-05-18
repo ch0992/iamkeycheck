@@ -80,16 +80,19 @@ STAGE=dev
 ## ⚙️ 실행 방법
 
 ```bash
-# 1. 로컬 Kubernetes 클러스터 실행
+# 1. Python 패키지 설치
+pip install -r requirements.txt
+
+# 2. 로컬 Kubernetes 클러스터 실행
 ./scripts/1.start_cluster.sh
 
-# 2. FastAPI 앱 이미지 빌드
+# 3. FastAPI 앱 이미지 빌드
 ./scripts/2.build_app.sh
 
-# 3. FastAPI 앱 이미지 배포
+# 4. FastAPI 앱 이미지 배포
 ./scripts/3.deploy_app.sh
 
-# 4. 클러스터 종료
+# 5. 클러스터 종료
 ./scripts/0.destroy_cluster.sh
 
 ```
