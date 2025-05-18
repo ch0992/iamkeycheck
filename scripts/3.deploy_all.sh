@@ -46,15 +46,15 @@ APP_LABEL="${APP_NAME}-${STAGE}-${IMAGE_TAG}"
 # 6. configmap에서 현재 배포된 IMAGE_TAG 추출
 CONFIGMAP_DEPLOYED_TAG=$(kubectl get configmap iamkeycheck-config -n "$STAGE" -o jsonpath='{.data.IMAGE_TAG}' 2>/dev/null || echo "")
 
-# 7. env.auto.tfvars 파일의 image_tag 동기화
+# 7. env.auto.tfvars 파일의 모든 변수 동기화
 TFVARS_FILE="$WORK_DIR/env.auto.tfvars"
 if [ -f "$TFVARS_FILE" ]; then
+  # 모든 필요한 변수들을 소문자로 업데이트
+  sed -i.bak "s/^STAGE *=.*/stage = \"$STAGE\"/" "$TFVARS_FILE"
+  sed -i.bak "s/^CSV_PATH *=.*/csv_path = \"$CSV_PATH\"/" "$TFVARS_FILE"
+  sed -i.bak "s/^LOG_LEVEL *=.*/log_level = \"$LOG_LEVEL\"/" "$TFVARS_FILE"
   if [ -z "$CONFIGMAP_DEPLOYED_TAG" ] || { [ "$(printf '%s\n%s\n' "$CONFIGMAP_DEPLOYED_TAG" "$IMAGE_TAG" | sort -V | tail -n1)" = "$IMAGE_TAG" ] && [ "$CONFIGMAP_DEPLOYED_TAG" != "$IMAGE_TAG" ]; }; then
-    if grep -q '^image_tag' "$TFVARS_FILE"; then
-      sed -i.bak "s/^image_tag *=.*/image_tag = \"$IMAGE_TAG\"/" "$TFVARS_FILE"
-    else
-      echo "image_tag = \"$IMAGE_TAG\"" >> "$TFVARS_FILE"
-    fi
+    sed -i.bak "s/^image_tag *=.*/image_tag = \"$IMAGE_TAG\"/" "$TFVARS_FILE"
     echo "📄 env.auto.tfvars 동기화 완료 → image_tag=$IMAGE_TAG (기존 배포 태그: $CONFIGMAP_DEPLOYED_TAG)"
   else
     echo "configmap의 IMAGE_TAG($CONFIGMAP_DEPLOYED_TAG)보다 빌드된 태그($IMAGE_TAG)가 높지 않아 업데이트하지 않음"
@@ -84,17 +84,33 @@ cd "$WORK_DIR"
 
 # 10. Terraform plan 실행
 echo "📋 Terraform plan 실행..."
-$TF_BIN plan -input=false \
-  -var "aws_access_key_id=$AWS_ACCESS_KEY_ID" \
-  -var "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY"
+# env.auto.tfvars가 있으면 환경 변수 전달 생략
+if [ -f "$WORK_DIR/env.auto.tfvars" ]; then
+  $TF_BIN plan -input=false
+else
+  TF_VAR_stage=$STAGE \
+  TF_VAR_log_level=$LOG_LEVEL \
+  TF_VAR_csv_path=$CSV_PATH \
+  TF_VAR_aws_access_key_id=$AWS_ACCESS_KEY_ID \
+  TF_VAR_aws_secret_access_key=$AWS_SECRET_ACCESS_KEY \
+  $TF_BIN plan -input=false
+fi
 
 # 11. Terraform apply 함수 정의 (충돌/롤백 Robust 처리)
 apply_with_retry() {
   set +e
   APPLY_LOG=$(mktemp)
-  $TF_BIN apply -input=false -auto-approve \
-    -var "aws_access_key_id=$AWS_ACCESS_KEY_ID" \
-    -var "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" 2>&1 | tee "$APPLY_LOG"
+  # env.auto.tfvars가 있으면 환경 변수 전달 생략
+  if [ -f "$WORK_DIR/env.auto.tfvars" ]; then
+    $TF_BIN apply -input=false -auto-approve 2>&1 | tee "$APPLY_LOG"
+  else
+    TF_VAR_stage=$STAGE \
+    TF_VAR_log_level=$LOG_LEVEL \
+    TF_VAR_csv_path=$CSV_PATH \
+    TF_VAR_aws_access_key_id=$AWS_ACCESS_KEY_ID \
+    TF_VAR_aws_secret_access_key=$AWS_SECRET_ACCESS_KEY \
+    $TF_BIN apply -input=false -auto-approve 2>&1 | tee "$APPLY_LOG"
+  fi
   STATUS=${PIPESTATUS[0]}
   set -e
 
@@ -151,7 +167,20 @@ apply_with_retry() {
 
 # 12. 변경점 감지: plan 실행 (터미널에 항상 출력)
 echo "🔍 Terraform 변경점(plan) 감지 중..."
-$TF_BIN plan -input=false -detailed-exitcode \
+# env.auto.tfvars가 있으면 환경 변수 전달 생략
+if [ -f "$WORK_DIR/env.auto.tfvars" ]; then
+  $TF_BIN plan -input=false -detailed-exitcode
+else
+  TF_VAR_stage=$STAGE \
+  TF_VAR_log_level=$LOG_LEVEL \
+  TF_VAR_csv_path=$CSV_PATH \
+  TF_VAR_aws_access_key_id=$AWS_ACCESS_KEY_ID \
+  TF_VAR_aws_secret_access_key=$AWS_SECRET_ACCESS_KEY \
+  $TF_BIN plan -input=false -detailed-exitcode
+fi \
+  -var "stage=$STAGE" \
+  -var "log_level=$LOG_LEVEL" \
+  -var "csv_path=$CSV_PATH" \
   -var "aws_access_key_id=$AWS_ACCESS_KEY_ID" \
   -var "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" | tee /tmp/tfplan.log
 PLAN_EXIT_CODE=${PIPESTATUS[0]}
