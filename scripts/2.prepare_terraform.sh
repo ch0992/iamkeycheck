@@ -19,6 +19,28 @@ for STAGE in dev prod; do
   WORK_DIR="terraform/environments/$STAGE"
   echo "✅ STAGE=$STAGE → 작업 디렉토리: $WORK_DIR"
 
+  # Terraform 바이너리 확인 및 자동 설치
+  TERRAFORM_VERSION=1.2.6
+  TF_BIN="$HOME/.local/bin/terraform"
+  export PATH="$HOME/.local/bin:$PATH"
+  if [ ! -x "$TF_BIN" ]; then
+    echo "⚠️  terraform 바이너리가 없어 직접 다운로드 시도"
+    mkdir -p "$HOME/.local/bin"
+    curl -Lo "$TF_BIN.zip" "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_darwin_amd64.zip"
+    unzip -o "$TF_BIN.zip" -d "$HOME/.local/bin"
+    rm "$TF_BIN.zip"
+    chmod +x "$TF_BIN"
+  fi
+
+  # Terraform 초기화 및 provider 설치
+  cd "$WORK_DIR"
+  "$TF_BIN" init -input=false     # 플러그인 다운로드 및 초기화
+  "$TF_BIN" fmt -check           # 코드 스타일 검사
+  "$TF_BIN" validate             # 구문 및 구성 유효성 검사
+  cd - > /dev/null
+
+  echo "✅ $STAGE 환경의 Terraform 초기화 완료"
+
   # 3. env.auto.tfvars 파일 생성 (주요 변수만 기록)
   echo "stage = \"$STAGE\"" > "$WORK_DIR/env.auto.tfvars"
   echo "namespace = \"$STAGE\"" >> "$WORK_DIR/env.auto.tfvars"

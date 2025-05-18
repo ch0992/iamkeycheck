@@ -9,6 +9,7 @@ unset LOG_LEVEL
 unset AWS_ACCESS_KEY_ID
 unset AWS_SECRET_ACCESS_KEY
 
+
 APP_NAME="iamkeycheck"
 DEPLOYMENT_NAME="iamkeycheck-deployment"
 DEFAULT_TAG="v1.0.0"
@@ -27,6 +28,59 @@ fi
 # 3. STAGE 기본값 설정
 STAGE="${STAGE:-dev}"
 echo "[DEBUG] 최종 STAGE=$STAGE"
+
+# CSV 파일 검증 함수
+csv_validation() {
+  local csv_dir="$1"
+  
+  # 디렉토리 존재 여부 검사
+  if [ ! -d "$csv_dir" ]; then
+    echo "❌ $csv_dir 디렉토리가 없습니다."
+    return 1
+  fi
+
+  # CSV 파일 검색
+  local csv_files=$(find "$csv_dir" -type f -name "*.csv")
+  if [ -z "$csv_files" ]; then
+    echo "❌ $csv_dir에 CSV 파일이 없습니다."
+    return 1
+  fi
+
+  # CSV 파일 정보 출력
+  echo "✅ $csv_dir에 다음 CSV 파일들이 있습니다:"
+  echo "$csv_files"
+  
+  return 0
+}
+
+
+# 배포이력 확인
+CURRENT_TAG=$(kubectl get configmap iamkeycheck-config -n "$STAGE" -o jsonpath='{.data.IMAGE_TAG}' 2>/dev/null || echo "")
+
+# 배포이력이 없는 경우에만 CSV 파일 검증과 AWS 키 추출 실행
+if [ -z "$CURRENT_TAG" ]; then
+  # CSV 파일 검증 실행
+  if ! csv_validation "$CSV_PATH"; then
+    exit 1
+  fi
+
+  # AWS 키 자동 추출
+  if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+    if command -v python3 >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+      CREDS_JSON=$(PYTHONPATH=. python3 ./scripts/../app/util/extract_aws_creds.py | grep -E '^\{.*\}$')
+      AWS_ACCESS_KEY_ID=$(echo "$CREDS_JSON" | jq -r .AWS_ACCESS_KEY_ID)
+      AWS_SECRET_ACCESS_KEY=$(echo "$CREDS_JSON" | jq -r .AWS_SECRET_ACCESS_KEY)
+      export AWS_ACCESS_KEY_ID
+      export AWS_SECRET_ACCESS_KEY
+      echo "🔑 CSV에서 AWS 키를 자동 추출했습니다."
+    else
+      echo "❌ AWS 키가 없고, python3/jq가 설치되어 있지 않습니다. 수동으로 입력하거나 패키지를 설치하세요."
+      exit 1
+    fi
+  fi
+fi
+
+
 
 # 4. configmap에서 IMAGE_TAG 조회 후 +1 증가(없으면 v1.0.0)
 CURRENT_TAG=$(kubectl get configmap iamkeycheck-config -n "$STAGE" -o jsonpath='{.data.IMAGE_TAG}' 2>/dev/null || echo "")
