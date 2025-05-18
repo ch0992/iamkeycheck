@@ -15,24 +15,20 @@
    - containerd 런타임 사용
    - Kubernetes 네임스페이스 자동 생성
 
-2. `4.prepare_terraform.sh`
+2. `2.prepare_terraform.sh`
    - Terraform 설치 및 환경 설정
    - 환경 변수 자동화
-   - Terraform 초기화
+   - Terraform 초기화 (terraform init)
+   - Terraform 검증 (terraform validate)
 
 ### 2. 배포 프로세스
 
-1. `2.build_app.sh`
+1. `3.build_app.sh`
    - FastAPI 애플리케이션 빌드
    - Docker 이미지 생성
    - 테스트 실행
 
-2. `5.deploy_terraform.sh`
-   - Terraform 배포 실행
-   - AWS 키 자동화
-   - 인프라 생성
-
-3. `3.deploy_all.sh`
+2. `4.deploy_all.sh`
    - 전체 배포 자동화
    - ConfigMap 업데이트
    - Pod 상태 모니터링
@@ -43,19 +39,6 @@
    - Colima 클러스터 중지 및 삭제
    - 모든 리소스 정리
    - 환경 정리
-
-3. `2.build_app.sh`
-   - FastAPI 애플리케이션 Docker 이미지 빌드
-   - 이미지 태그 자동 관리
-   - 환경 변수 자동 설정
-   - 이미지 레지스트리 푸시
-
-4. `3.deploy_all.sh`
-   - 전체 배포 자동화
-   - AWS 키 자동 추출
-   - Terraform 배포
-   - Pod 상태 모니터링
-   - ConfigMap 업데이트
 
 ### 3. Terraform 관리
 
@@ -91,7 +74,7 @@
 - 클러스터 상태 확인
 
 # 2. Terraform 환경 준비 (필수)
-./4.prepare_terraform.sh
+./2.prepare_terraform.sh
 
 ### 결과
 - Terraform 자동 설치 (버전 1.2.6)
@@ -99,7 +82,7 @@
 - Terraform 초기화 완료
 
 # 3. 애플리케이션 빌드
-./2.build_app.sh
+./3.build_app.sh
 
 ### 결과
 - Docker 이미지 빌드
@@ -107,7 +90,7 @@
 - 테스트 실행
 
 # 4. 전체 배포
-./3.deploy_all.sh
+./4.deploy_all.sh
 
 ### 결과
 - AWS 키 자동 추출
@@ -216,19 +199,24 @@ LOG_LEVEL=INFO  # 로그 레벨
 1. **스크립트 실행 순서**
    - 반드시 순서대로 실행해야 함
    - 중간 단계 건너뛰지 않기
+   - stage 변경시 반드시 prepare_terraform.sh를 다시 실행해야 함
+   - 반드시 root 디렉토리에서 실행해야 함 (/iamkeycheck에 위치해야 함)
 
    ```bash
    # 1. 클러스터 시작
    ./1.start_cluster.sh
 
-   # 2. 애플리케이션 빌드
-   ./2.build_app.sh
+   # 2. Terraform 환경 준비 (stage 변경시 반드시 실행해야 terraform init이 실행되어 배포가능한 상태가 됨)
+   ./2.prepare_terraform.sh
 
-   # 3. 전체 배포
-   ./3.deploy_all.sh
+   # 3. 애플리케이션 빌드
+   ./3.build_app.sh
 
-   # 4. 클러스터 종료
-   ./6.delete_cluster.sh
+   # 4. 전체 배포
+   ./4.deploy_all.sh
+
+   # 5. 클러스터 종료
+   ./5.delete_cluster.sh
    ```
 
 2. **권한 확인**

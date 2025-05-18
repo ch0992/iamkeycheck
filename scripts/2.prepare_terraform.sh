@@ -2,76 +2,60 @@
 set -e
 set -x
 
-echo "[준비] Terraform 설치 확인 및 환경 준비"
-
-# 1. 환경 변수 로딩 및 env.auto.tfvars 생성
-ENV_FILE=.env
-if [ ! -f "$ENV_FILE" ]; then
+# 1. .env 파일에서 STAGE 및 기타 환경 변수 로딩
+ENV_FILE=".env"
+if [ -f "$ENV_FILE" ]; then
+  set -a
+  source "$ENV_FILE"
+  set +a
+else
   echo "❌ .env 파일이 없습니다."
   exit 1
 fi
-set -a
-source .env
-set +a
 
-# 2. 모든 환경(dev, prod) 설정
-for STAGE in dev prod; do
-  WORK_DIR="terraform/environments/$STAGE"
-  echo "✅ STAGE=$STAGE → 작업 디렉토리: $WORK_DIR"
+# 2. STAGE가 비어 있으면 기본값은 dev
+STAGE="${STAGE:-dev}"
 
-  # Terraform 바이너리 확인 및 자동 설치
-  TERRAFORM_VERSION=1.2.6
-  TF_BIN="$HOME/.local/bin/terraform"
-  export PATH="$HOME/.local/bin:$PATH"
-  if [ ! -x "$TF_BIN" ]; then
-    echo "⚠️  terraform 바이너리가 없어 직접 다운로드 시도"
-    mkdir -p "$HOME/.local/bin"
-    curl -Lo "$TF_BIN.zip" "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_darwin_amd64.zip"
-    unzip -o "$TF_BIN.zip" -d "$HOME/.local/bin"
-    rm "$TF_BIN.zip"
-    chmod +x "$TF_BIN"
-  fi
+# 3. 작업 디렉토리 및 Terraform 실행 바이너리 설정
+WORK_DIR="terraform/environments/$STAGE"
+TF_BIN="${TF_BIN:-$HOME/.local/bin/terraform}"
 
-  # Terraform 초기화 및 provider 설치
-  cd "$WORK_DIR"
-  "$TF_BIN" init -input=false     # 플러그인 다운로드 및 초기화
-  "$TF_BIN" fmt -check           # 코드 스타일 검사
-  "$TF_BIN" validate             # 구문 및 구성 유효성 검사
-  cd - > /dev/null
-
-  echo "✅ $STAGE 환경의 Terraform 초기화 완료"
-
-  # 3. env.auto.tfvars 파일 생성 (주요 변수만 기록)
-  echo "stage = \"$STAGE\"" > "$WORK_DIR/env.auto.tfvars"
-  echo "namespace = \"$STAGE\"" >> "$WORK_DIR/env.auto.tfvars"
-  [ -n "$CSV_PATH" ] && echo "csv_path = \"$CSV_PATH\"" >> "$WORK_DIR/env.auto.tfvars"
-  [ -n "$LOG_LEVEL" ] && echo "log_level = \"$LOG_LEVEL\"" >> "$WORK_DIR/env.auto.tfvars"
-  : "${image_tag:=${IMAGE_TAG}}"
-  : "${n_hours:=${N_HOURS:-24}}"
-  echo "image_tag = \"$IMAGE_TAG\"" >> "$WORK_DIR/env.auto.tfvars"
-  echo "n_hours = $n_hours" >> "$WORK_DIR/env.auto.tfvars"
-  echo "✅ $WORK_DIR/env.auto.tfvars 생성 완료 (AWS 변수는 무시됨)"
-
-done
-
-# 4. Terraform 바이너리 확인 및 자동 설치
-TERRAFORM_VERSION=1.2.6
-TF_BIN="$HOME/.local/bin/terraform"
-export PATH="$HOME/.local/bin:$PATH"
+# 3-1. Terraform 자동 설치 (없을 경우)
 if [ ! -x "$TF_BIN" ]; then
-  echo "⚠️  terraform 바이너리가 없어 직접 다운로드 시도"
-  mkdir -p "$HOME/.local/bin"
-  curl -Lo "$TF_BIN.zip" "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_darwin_amd64.zip"
-  unzip -o "$TF_BIN.zip" -d "$HOME/.local/bin"
+  echo "📦 terraform 실행파일이 없어 설치를 시작합니다..."
+  TERRAFORM_VERSION="1.2.6"
+  mkdir -p "$(dirname "$TF_BIN")"
+  curl -Lo "$TF_BIN.zip" "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_darwin_arm64.zip"
+  unzip -o "$TF_BIN.zip" -d "$(dirname "$TF_BIN")"
   rm "$TF_BIN.zip"
   chmod +x "$TF_BIN"
+  echo "✅ terraform 설치 완료 → $TF_BIN"
 fi
 
-# 5. Terraform 프로젝트 초기화 및 검증
+echo "🔧 [$STAGE] 작업 디렉토리: $WORK_DIR"
 cd "$WORK_DIR"
-"$TF_BIN" init -input=false     # 플러그인 다운로드 및 초기화
-"$TF_BIN" fmt -check           # 코드 스타일 검사
-"$TF_BIN" validate             # 구문 및 구성 유효성 검사
-cd - > /dev/null
 
-echo "✅ Terraform 준비 완료!"
+# 4. 이전 초기화 캐시 제거 및 terraform init
+[ -d ".terraform" ] && rm -rf .terraform
+if ! "$TF_BIN" init -input=false -upgrade=true -reconfigure; then
+  echo "❌ [$STAGE] terraform init 실패"
+  exit 1
+fi
+
+# 5. 코드 포맷 확인 및 유효성 검사
+"$TF_BIN" fmt -check
+"$TF_BIN" validate
+
+# 6. env.auto.tfvars 파일 생성
+echo "stage = \"$STAGE\"" > env.auto.tfvars
+echo "namespace = \"$STAGE\"" >> env.auto.tfvars
+[ -n "$CSV_PATH" ] && echo "csv_path = \"$CSV_PATH\"" >> env.auto.tfvars
+[ -n "$LOG_LEVEL" ] && echo "log_level = \"$LOG_LEVEL\"" >> env.auto.tfvars
+: "${image_tag:=${IMAGE_TAG}}"
+: "${n_hours:=${N_HOURS:-24}}"
+echo "image_tag = \"$image_tag\"" >> env.auto.tfvars
+echo "n_hours = $n_hours" >> env.auto.tfvars
+
+# 7. 완료 메시지 출력 후 이전 디렉토리 복귀
+echo "✅ [$STAGE] 초기화 완료"
+cd - > /dev/null

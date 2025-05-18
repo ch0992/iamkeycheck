@@ -3,3 +3,4 @@ namespace = "prod"
 csv_path = "app/api/secrets/"
 log_level = "INFO"
 n_hours = 24
+image_tag = "v1.0.0"

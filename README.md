@@ -5,6 +5,19 @@
 `iamkeycheck`는 AWS IAM 사용자 Access Key 중 **N시간 이상 경과된 키를 필터링**하는 FastAPI 기반의 웹 애플리케이션입니다.  
 Colima 기반 로컬 Kubernetes(k3s) 클러스터에 Terraform으로 배포되며, 모든 구성 요소는 스크립트로 자동화되어 있습니다.
 
+## 🛠️ 개발 환경
+
+- **OS**: macOS Sonoma 14.6.1
+- **CPU**: Apple M1 Pro
+- **RAM**: 16GB
+
+### 주요 도구 버전
+- **Python**: 3.10 이상
+- **Terraform**: 1.2.6
+- **Kubernetes**: 1.29.1 (k3s)
+- **Docker**: 25.0.2
+- **Colima**: 최신 안정 버전
+
 ## 🛠️ 필수 요구사항
 
 - Homebrew가 설치되어 있어야 합니다.
@@ -91,17 +104,18 @@ pip install -r requirements.txt
 # 2. 로컬 Kubernetes 클러스터 실행
 ./scripts/1.start_cluster.sh
 
-# 2.1 Terraform 설치 및 환경 설정
-./scripts/4.prepare_terraform.sh
+# 2.1 Terraform 설치 및 환경 설정 (stage 변경시 반드시 실행해야 terraform init이 실행되어 배포가능한 상태가 됨)
+ * 각 스테이지 별로 한번씩 반드시 실행해야 함. 이후에는 3번, 4번으로 빌드 및 배포만 하면 됨
+./scripts/2.prepare_terraform.sh
 
 # 3. FastAPI 앱 이미지 빌드
-./scripts/2.build_app.sh
+./scripts/3.build_app.sh
 
 # 4. FastAPI 앱 이미지 배포
-./scripts/3.deploy_all.sh
+./scripts/4.deploy_all.sh
 
 # 5. 클러스터 종료
-./scripts/0.destroy_cluster.sh
+./scripts/5.destroy_cluster.sh
 ```
 
 > **주의**: 모든 스크립트는 프로젝트 루트 디렉토리(`/Users/ygtoken/workspace/iamkeycheck`)에서 실행되어야 합니다.
