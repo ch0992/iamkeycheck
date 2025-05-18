@@ -55,9 +55,9 @@ Colima 기반 로컬 Kubernetes(k3s) 클러스터에 Terraform으로 배포되�
 
 | 디렉토리   | 문서 위치             | 내용 요약 |
 |------------|------------------------|-----------|
-| `app/`     | `app/README.md`        | FastAPI 애플리케이션 구조, API 설명 및 주요 모듈 안내 |
-| `scripts/` | `scripts/README.md`    | 실행 스크립트별 역할, 실행 순서, 주요 옵션 안내 |
-| `terraform/` | `terraform/README.md` | 환경별 리소스 정의 구조, Terraform 모듈 설명 및 배포 전략 |
+| `app/`     | [app/README.md](app/README.md)        | FastAPI 애플리케이션 구조, API 설명 및 주요 모듈 안내 |
+| `scripts/` | [scripts/README.md](scripts/README.md)    | 실행 스크립트별 역할, 실행 순서, 주요 옵션 안내 |
+| `terraform/` | [terraform/README.md](terraform/README.md) | 환경별 리소스 정의 구조, Terraform 모듈 설명 및 배포 전략 |
 
 ---
 
