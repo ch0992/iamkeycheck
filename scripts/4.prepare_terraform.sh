@@ -14,24 +14,23 @@ set -a
 source .env
 set +a
 
-# 2. 필수 환경변수(STAGE) 확인
-if [ -z "$STAGE" ]; then
-  echo "❌ STAGE 환경변수가 필요합니다."
-  exit 1
-fi
-WORK_DIR="terraform/environments/$STAGE"
-echo "✅ STAGE=$STAGE → 작업 디렉토리: $WORK_DIR"
+# 2. 모든 환경(dev, prod) 설정
+for STAGE in dev prod; do
+  WORK_DIR="terraform/environments/$STAGE"
+  echo "✅ STAGE=$STAGE → 작업 디렉토리: $WORK_DIR"
 
-# 3. env.auto.tfvars 파일 생성 (주요 변수만 기록)
-echo "STAGE = \"$STAGE\"" > "$WORK_DIR/env.auto.tfvars"
-echo "namespace = \"$STAGE\"" >> "$WORK_DIR/env.auto.tfvars"
-[ -n "$CSV_PATH" ] && echo "CSV_PATH = \"$CSV_PATH\"" >> "$WORK_DIR/env.auto.tfvars"
-[ -n "$LOG_LEVEL" ] && echo "LOG_LEVEL = \"$LOG_LEVEL\"" >> "$WORK_DIR/env.auto.tfvars"
-: "${image_tag:=${IMAGE_TAG:-latest}}"
-: "${n_hours:=${N_HOURS:-24}}"
-echo "image_tag = \"$image_tag\"" >> "$WORK_DIR/env.auto.tfvars"
-echo "n_hours = $n_hours" >> "$WORK_DIR/env.auto.tfvars"
-echo "✅ $WORK_DIR/env.auto.tfvars 생성 완료 (AWS 변수는 무시됨)"
+  # 3. env.auto.tfvars 파일 생성 (주요 변수만 기록)
+  echo "stage = \"$STAGE\"" > "$WORK_DIR/env.auto.tfvars"
+  echo "namespace = \"$STAGE\"" >> "$WORK_DIR/env.auto.tfvars"
+  [ -n "$CSV_PATH" ] && echo "csv_path = \"$CSV_PATH\"" >> "$WORK_DIR/env.auto.tfvars"
+  [ -n "$LOG_LEVEL" ] && echo "log_level = \"$LOG_LEVEL\"" >> "$WORK_DIR/env.auto.tfvars"
+  : "${image_tag:=${IMAGE_TAG:-latest}}"
+  : "${n_hours:=${N_HOURS:-24}}"
+  echo "image_tag = \"$image_tag\"" >> "$WORK_DIR/env.auto.tfvars"
+  echo "n_hours = $n_hours" >> "$WORK_DIR/env.auto.tfvars"
+  echo "✅ $WORK_DIR/env.auto.tfvars 생성 완료 (AWS 변수는 무시됨)"
+
+done
 
 # 4. Terraform 바이너리 확인 및 자동 설치
 TERRAFORM_VERSION=1.2.6
