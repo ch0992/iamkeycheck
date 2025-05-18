@@ -123,6 +123,17 @@ pip install -r requirements.txt
 > 각 스크립트의 세부 기능 및 옵션은 `scripts/README.md`를 참고하세요.
 
 ---
+## Swagger 및 API 문서 접근
+
+위의 **실행방법** 대로 .env에서 **dev,prod** 각각 설정하여 실행하면 Swagger 및 정의된 API 문서에 접근이 가능해집니다.
+
+
+**접근주소**
+- Swagger : http://localhost:30500/docs (dev)
+          : http://localhost:31500/docs (prod)
+- API Doc : http://localhost:30500/redoc (dev)
+          : http://localhost:31500/redoc (prod)  
+
 
 ## IAM Access Key 설정 방법
 
