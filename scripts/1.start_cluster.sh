@@ -12,6 +12,7 @@ if ! which colima >/dev/null 2>&1; then
     if [[ "$yn" =~ ^[Yy]$ ]]; then
         echo "brew install colima 명령으로 자동 설치를 시작합니다."
         brew install colima
+        # 설치 후 colima 명령 재확인
         if ! which colima >/dev/null 2>&1; then
             echo "❌ colima 설치에 실패했습니다. 수동으로 설치 후 다시 실행하세요."
             exit 1
@@ -25,24 +26,28 @@ else
     echo "✅ colima가 이미 설치되어 있습니다."
 fi
 
+# 1. Colima 클러스터 시작 (containerd 런타임, Kubernetes 포함)
 echo "🧱 Colima(Kubernetes 포함) 클러스터를 시작합니다... (containerd 런타임 고정)"
-colima stop || true
+colima stop || true  # 기존 실행 중인 Colima 중지(에러 무시)
 colima start --with-kubernetes --cpu 2 --memory 4 --disk 20 --runtime containerd
 
-# nerdctl alias 설치 (Colima의 containerd에 로컬 nerdctl 프록시)
+# 2. nerdctl alias 설치 (Colima의 containerd에 로컬 nerdctl 프록시)
 echo "🛠️ nerdctl alias(프록시) 설치 중..."
 colima nerdctl install
 
-# nerdctl info로 연결 확인
+# 3. nerdctl info로 Colima containerd 연결 상태 확인
 echo "🔍 nerdctl info로 Colima containerd 연결 상태 확인..."
 nerdctl info || { echo '❌ nerdctl이 Colima containerd에 연결되지 않았습니다. Colima 상태와 nerdctl 설치를 확인하세요.'; exit 1; }
 
+# 4. kubectl context를 colima로 전환
 echo "🔗 kubectl context를 colima로 전환합니다..."
 kubectl config use-context colima
 
+# 5. 쿠버네티스 클러스터 노드 상태 확인
 echo "🔍 쿠버네티스 클러스터 노드 상태를 확인합니다..."
 kubectl get nodes
 
+# 6. nerdctl 사용 안내 및 주의사항 출력
 echo "✅ nerdctl은 Mac에 별도 설치할 필요 없이, Colima가 프록시를 제공합니다."
 echo "    nerdctl build -t your-image-name ."
 echo "    nerdctl ps"

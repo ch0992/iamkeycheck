@@ -2,6 +2,10 @@ variable "image_tag" {
   type = string
 }
 
+variable "stage" {
+  type = string
+}
+
 variable "n_hours" {
   type = number
 }
@@ -10,22 +14,18 @@ variable "namespace" {
   type = string
 }
 
-variable "STAGE" {
+variable "log_level" {
   type = string
 }
 
-variable "CSV_PATH" {
+variable "csv_path" {
   type = string
 }
 
-variable "LOG_LEVEL" {
+variable "aws_access_key_id" {
   type = string
 }
 
-variable "AWS_ACCESS_KEY_ID" {
-  type = string
-}
-
-variable "AWS_SECRET_ACCESS_KEY" {
+variable "aws_secret_access_key" {
   type = string
 }

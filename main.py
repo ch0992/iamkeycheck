@@ -5,10 +5,13 @@ from app.api.routes import stale_key_route
 
 # FastAPI 애플리케이션 인스턴스 생성
 # 전체 API의 엔트리포인트가 되는 객체입니다.
-app = FastAPI()
 
-# 환경설정 객체 생성 (예: 환경변수, 설정값 등 관리)
 settings = Settings()
+app = FastAPI(
+    title=f"IAM Key Checker ({settings.STAGE})",
+    version=settings.IMAGE_TAG or "0.1.0",
+    openapi_version="3.1.0"
+)
 
 # Access Key 관련 라우터(stale-keys 등)를 앱에 등록
 app.include_router(stale_key_route.router)

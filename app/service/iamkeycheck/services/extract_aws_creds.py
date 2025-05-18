@@ -5,7 +5,7 @@ from pathlib import Path
 
 # 기존 AccessKeyChecker 재사용
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
-from app.service.iamkeycheck.services.impl.stale_key_checker import AccessKeyChecker
+from app.service.iamkeycheck.services.stale_key_checker import AccessKeyChecker
 
 checker = AccessKeyChecker()
 creds = checker.load_all_credentials()

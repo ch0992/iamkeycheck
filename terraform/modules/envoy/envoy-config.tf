@@ -1,6 +1,6 @@
 resource "kubernetes_config_map" "envoy_config" {
   metadata {
-    name = "envoy-config"
+    name      = "envoy-config"
     namespace = var.namespace
   }
   data = {
@@ -23,24 +23,24 @@ static_resources:
               domains: ["*"]
               routes:
               - match: { prefix: "/" }
-                route: { cluster: app_service }
+                route: { cluster: app_service_${var.stage} }
           http_filters:
           - name: envoy.filters.http.router
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
   clusters:
-  - name: app_service
+  - name: app_service_${var.stage}
     connect_timeout: 0.25s
     type: logical_dns
     lb_policy: round_robin
     load_assignment:
-      cluster_name: app_service
+      cluster_name: app_service_${var.stage}
       endpoints:
       - lb_endpoints:
         - endpoint:
             address:
               socket_address:
-                address: iamkeycheck-service
+                address: iamkeycheck-service-${var.stage}
                 port_value: 8000
 EOF
   }

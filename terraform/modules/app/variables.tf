@@ -3,6 +3,11 @@ variable "namespace" {
   default = "default"
 }
 
+variable "stage" {
+  type = string
+}
+
+
 variable "image_tag" { type = string }
 variable "n_hours" { type = number }
 

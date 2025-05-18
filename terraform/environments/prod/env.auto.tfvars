@@ -1,6 +1,6 @@
-STAGE = "prod"
+stage = "prod"
 namespace = "prod"
-CSV_PATH = "app/api/secrets/"
-LOG_LEVEL = "INFO"
-image_tag = "v1.0.0"
+csv_path = "app/api/secrets/"
+log_level = "info"
 n_hours = 24
+image_tag = "v1.0.10"
