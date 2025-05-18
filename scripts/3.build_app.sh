@@ -38,6 +38,8 @@ csv_validation() {
   csv_files=$(find "$csv_dir" -type f -name "*.csv")
   if [ -z "$csv_files" ]; then
     echo "❌ $csv_dir에 CSV 파일이 없습니다."
+    echo "📌 형식: 'Access key ID,Secret access key' 를 포함한 CSV 파일을 다음 경로에 넣어주세요:"
+    echo "    → $csv_dir"
     return 1
   fi
 
